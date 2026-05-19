@@ -90,17 +90,78 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    exploration_stack = util.Stack()
+    
+    start_state = problem.getStartState()
+    exploration_stack.push((start_state, []))
+    visited_nodes = set()
+    
+    while not exploration_stack.isEmpty():
+        current_state, action_path = exploration_stack.pop()
+        
+        if problem.isGoalState(current_state):
+            return action_path
+            
+        if current_state not in visited_nodes:
+            visited_nodes.add(current_state)
+            for next_state, action, step_cost in problem.getSuccessors(current_state):
+                if next_state not in visited_nodes:
+                    new_path = action_path + [action]
+                    exploration_stack.push((next_state, new_path))
+                    
+    return [] # Return empty list if no path is found
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    exploration_queue = util.Queue()
+    
+    start_state = problem.getStartState()
+    exploration_queue.push((start_state, []))
+    visited_nodes = set()
+    
+    while not exploration_queue.isEmpty():
+        current_state, action_path = exploration_queue.pop()
+        
+        if problem.isGoalState(current_state):
+            return action_path
+            
+        if current_state not in visited_nodes:
+            visited_nodes.add(current_state)
+            for next_state, action, step_cost in problem.getSuccessors(current_state):
+                if next_state not in visited_nodes:
+                    new_path = action_path + [action]
+                    exploration_queue.push((next_state, new_path))        
+    return []
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    exploration_pq = util.PriorityQueue()
+    
+    start_state = problem.getStartState()
+    # queue -> (current_state, path_of_actions, cumulative_cost)
+    exploration_pq.push((start_state, [], 0), 0)
+    
+    visited_nodes = set()
+    
+    while not exploration_pq.isEmpty():
+        current_state, action_path, current_cost = exploration_pq.pop()
+        
+        if problem.isGoalState(current_state):
+            return action_path
+            
+        if current_state not in visited_nodes:
+            visited_nodes.add(current_state)
+            
+            for next_state, action, step_cost in problem.getSuccessors(current_state):
+                if next_state not in visited_nodes:
+                    new_path = action_path + [action]
+                    new_cumulative_cost = current_cost + step_cost
+                    
+                    # PriorityQueue -> priority = cumulative cost
+                    exploration_pq.push((next_state, new_path, new_cumulative_cost), new_cumulative_cost)  
+    return []
 
 def nullHeuristic(state, problem=None) -> float:
     """
@@ -112,7 +173,33 @@ def nullHeuristic(state, problem=None) -> float:
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # priority queue -> f(n) = g(n) + h(n)
+    open_list = util.PriorityQueue()
+    start_loc = problem.getStartState()
+    
+    # queue -> (current_state, path_of_actions, cumulative_g_cost)
+    # priority -> 0 + heuristic
+    initial_f_cost = 0 + heuristic(start_loc, problem)
+    open_list.push((start_loc, [], 0), initial_f_cost)
+    best_costs_so_far = {start_loc: 0}
+    
+    while not open_list.isEmpty():
+        curr_loc, moves, g_cost = open_list.pop()
+        
+        if problem.isGoalState(curr_loc):
+            return moves
+            
+        if best_costs_so_far.get(curr_loc, float('inf')) >= g_cost:
+            
+            for next_loc, action, step_cost in problem.getSuccessors(curr_loc):
+                new_g_cost = g_cost + step_cost
+                
+                if new_g_cost < best_costs_so_far.get(next_loc, float('inf')):
+                    best_costs_so_far[next_loc] = new_g_cost
+                    new_moves = moves + [action]
+                    f_cost = new_g_cost + heuristic(next_loc, problem)
+                    open_list.push((next_loc, new_moves, new_g_cost), f_cost)    
+    return []
 
 # Abbreviations
 bfs = breadthFirstSearch
